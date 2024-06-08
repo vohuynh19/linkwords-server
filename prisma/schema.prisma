@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example
+model Book {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String
+}
+
+// Enum
+enum Platform {
+  BROWSER
+  ANDROID
+  IOS
+}
+
+enum SessionStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+// Model
+
+model User {
+  id              Int               @id @default(autoincrement())
+  username        String
+  Point           Point?
+  Account         Account?
+  Session         Session[]
+  GameMatchOnUser GameMatchOnUser[]
+}
+
+model Account {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  fullName    String?
+  email       String?
+  phoneNumber String?
+  phoneCode   String?
+  User        User    @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id     Int @id @default(autoincrement())
+  userId Int
+
+  Status   SessionStatus @default(ACTIVE)
+  Platform Platform      @default(ANDROID)
+  User     User          @relation(fields: [userId], references: [id])
+}
+
+model Point {
+  userId Int  @id @unique
+  amount Int
+  User   User @relation(fields: [userId], references: [id])
+}
+
+model GameMatch {
+  id               Int               @id @default(autoincrement())
+  gameActivityData String // Stringify the json of socket data
+  gameMatchOnUser  GameMatchOnUser[]
+}
+
+model GameMatchOnUser {
+  userId      Int
+  gameMatchId Int
+  user        User      @relation(fields: [userId], references: [id])
+  gameMatch   GameMatch @relation(fields: [gameMatchId], references: [id])
+
+  @@id([userId, gameMatchId])
+}
