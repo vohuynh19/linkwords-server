@@ -13,7 +13,7 @@ import { UserService } from './user.service';
 // import { Request, Response } from 'express';
 import { User } from './user.model';
 
-@Controller('api/user')
+@Controller('api/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
