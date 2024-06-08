@@ -16,16 +16,51 @@ export class EventGateway
 {
   @WebSocketServer()
   server: Server;
-  constructor() {}
+
+  userIdList: string[];
+  constructor() {
+    this.userIdList = [];
+  }
+
+  @SubscribeMessage('enqueue')
+  async handleEnqueue(@ConnectedSocket() socket: Socket) {
+    const userId = socket.data.userId;
+    this.userIdList.push(userId);
+
+    const match = this.createMatch();
+
+    if (match != null) {
+      const userId1 = match[0];
+      const userId2 = match[1];
+      const roomId = `${userId1}-${userId2}`;
+      this.server.to(userId1).emit('matchRoom', roomId);
+      this.server.to(userId2).emit('matchRoom', roomId);
+    }
+  }
+
+  @SubscribeMessage('joinRoom')
+  async handleJoinRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    socket.join(data.roomId);
+    this.server.to(data.roomId).emit('joinRoomSuccess', data.roomId);
+  }
 
   @SubscribeMessage('message')
-  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data) {
-    const roomId = socket.data.userId;
-    this.server.to(roomId).emit('message', data);
+  async handleMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: {
+      roomId: string;
+      message: string;
+    },
+  ) {
+    this.server.to(data.roomId).emit('message', data.message);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  afterInit(socket: Socket): any {}
+  afterInit(): any {}
 
   async handleConnection(socket: Socket) {
     const userId = Number(socket.handshake.headers['user-id']);
@@ -47,5 +82,14 @@ export class EventGateway
       `socket-id: ${socket.id}`,
       `userid: ${socket.data.userId}`,
     );
+  }
+
+  createMatch() {
+    if (this.userIdList.length >= 2) {
+      const id1 = this.userIdList.pop();
+      const id2 = this.userIdList.pop();
+      return [id1, id2];
+    }
+    return null;
   }
 }
