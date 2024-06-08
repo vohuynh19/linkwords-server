@@ -4,10 +4,11 @@ import { AppService } from './app.service';
 
 import { BookModule } from './book/book.module';
 import { UserModule } from './user/user.module';
+import { EventGateway } from './event.gateway';
 
 @Module({
   imports: [BookModule, UserModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EventGateway],
 })
 export class AppModule {}
