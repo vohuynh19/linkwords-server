@@ -30,6 +30,8 @@ export class EventGateway
   async handleConnection(socket: Socket) {
     const userId = Number(socket.handshake.headers['user-id']);
 
+    console.log(`connection ${userId}`);
+
     socket.data.userId = userId;
     try {
       socket.join(socket.data.userId);
@@ -40,6 +42,10 @@ export class EventGateway
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log('disconnect', socket.id, socket.data.userId);
+    console.log(
+      'disconnect',
+      `socket-id: ${socket.id}`,
+      `userid: ${socket.data.userId}`,
+    );
   }
 }
