@@ -5,7 +5,7 @@ import {
   Get,
   Param,
   Post,
-  // Put,
+  Put,
   // Req,
   // Res,
 } from '@nestjs/common';
@@ -23,7 +23,12 @@ export class UserController {
   }
 
   @Post()
-  async postBook(@Body() postData: User): Promise<User> {
+  async postUser(@Body() postData: User): Promise<User> {
     return this.userService.createUser(postData);
+  }
+
+  @Put(':id')
+  async updateUser(@Param('id') id: number, @Body() data: User): Promise<User> {
+    return this.userService.updateUser(id, data);
   }
 }
