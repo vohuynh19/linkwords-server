@@ -25,7 +25,9 @@ export class EventGateway
   @SubscribeMessage('enqueue')
   async handleEnqueue(@ConnectedSocket() socket: Socket) {
     const userId = socket.data.userId;
-    this.userIdList.push(userId);
+    if (!this.userIdList.includes(userId)) {
+      this.userIdList.push(userId);
+    }
 
     const match = this.createMatch();
 
@@ -38,6 +40,12 @@ export class EventGateway
     }
   }
 
+  @SubscribeMessage('dequeue')
+  async handleDequeue(@ConnectedSocket() socket: Socket) {
+    const userId = socket.data.userId;
+    this.userIdList = this.userIdList.filter((item) => item != userId);
+  }
+
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(
     @ConnectedSocket() socket: Socket,
@@ -45,6 +53,15 @@ export class EventGateway
   ) {
     socket.join(data.roomId);
     this.server.to(data.roomId).emit('joinRoomSuccess', data.roomId);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  async handleLeaveRoom(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    this.server.to(data.roomId).emit('leaveRoomSuccess', data.roomId);
+    socket.leave(data.roomId);
   }
 
   @SubscribeMessage('message')
