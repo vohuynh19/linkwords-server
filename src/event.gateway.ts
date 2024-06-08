@@ -38,8 +38,14 @@ export class EventGateway
       const userId1 = match[0];
       const userId2 = match[1];
       const roomId = `${userId1}-${userId2}`;
-      this.server.to(userId1).emit('matchRoom', roomId);
-      this.server.to(userId2).emit('matchRoom', roomId);
+      this.server.to(userId1).emit('matchRoom', {
+        roomId,
+        competitorId: userId2,
+      });
+      this.server.to(userId2).emit('matchRoom', {
+        roomId,
+        competitorId: userId1,
+      });
     }
   }
 
