@@ -155,6 +155,24 @@ export class EventGateway
     this.server.to(socket.data.userId).emit('pointUpdate');
   }
 
+  @SubscribeMessage('pointDecrease')
+  async handleDecreasePoint(@ConnectedSocket() socket: Socket) {
+    const userId = socket.data.userId as string;
+    console.log('pointDecrease', userId);
+
+    const currentUser = await this.userService.getUser(Number(userId));
+
+    const newpoint = currentUser.point - 25;
+
+    // Update User Point
+    await this.userService.updateUser(Number(userId), {
+      username: currentUser.username,
+      point: newpoint > 0 ? newpoint : 0,
+    });
+
+    this.server.to(socket.data.userId).emit('pointUpdate');
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   afterInit(): any {}
 
