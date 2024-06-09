@@ -7,8 +7,8 @@ import { UserModule } from './user/user.module';
 import { EventsModule } from './event.module';
 
 @Module({
-  imports: [BookModule, UserModule, EventsModule],
+  imports: [BookModule, UserModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EventsModule],
 })
 export class AppModule {}
