@@ -109,7 +109,8 @@ export class EventGateway
     const userId = socket.data.userId;
     console.log('ready', userId);
 
-    if (!this.roomAgreement[roomId].includes(userId)) {
+    if (!this.roomAgreement[roomId]?.includes(userId)) {
+      this.roomAgreement[roomId] = [];
       this.roomAgreement[roomId].push(userId);
     }
 
