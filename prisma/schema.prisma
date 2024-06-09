@@ -38,7 +38,7 @@ enum SessionStatus {
 model User {
   id              Int               @id @default(autoincrement())
   username        String
-  Point           Point?
+  point           Int               @default(0)
   Account         Account?
   Session         Session[]
   GameMatchOnUser GameMatchOnUser[]
@@ -55,18 +55,11 @@ model Account {
 }
 
 model Session {
-  id     Int @id @default(autoincrement())
-  userId Int
-
+  id       Int           @id @default(autoincrement())
+  userId   Int
   Status   SessionStatus @default(ACTIVE)
   Platform Platform      @default(ANDROID)
   User     User          @relation(fields: [userId], references: [id])
-}
-
-model Point {
-  userId Int  @id @unique
-  amount Int
-  User   User @relation(fields: [userId], references: [id])
 }
 
 model GameMatch {

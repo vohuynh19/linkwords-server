@@ -9,6 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UserService } from './user/user.service';
 
 @WebSocketGateway(3001, { cors: true })
 export class EventGateway
@@ -16,10 +17,13 @@ export class EventGateway
 {
   @WebSocketServer()
   server: Server;
-
+  roomAgreement: {
+    [roomid: string]: string[];
+  };
   userIdList: string[];
-  constructor() {
+  constructor(private readonly userService: UserService) {
     this.userIdList = [];
+    this.roomAgreement = {};
   }
 
   @SubscribeMessage('enqueue')
@@ -90,6 +94,61 @@ export class EventGateway
   ) {
     console.log('message', data.roomId, data.message);
     this.server.to(data.roomId).emit('message', data.message);
+  }
+
+  @SubscribeMessage('ready')
+  async handleReady(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    {
+      roomId,
+    }: {
+      roomId: string;
+    },
+  ) {
+    const userId = socket.data.userId;
+    console.log('ready', userId);
+
+    if (!this.roomAgreement[roomId].includes(userId)) {
+      this.roomAgreement[roomId].push(userId);
+    }
+
+    if (this.roomAgreement[roomId].length === 2) {
+      const first_user = this.roomAgreement[roomId][0];
+
+      this.server.to(roomId).emit('startGame', {
+        startUserId: first_user,
+      });
+    }
+  }
+
+  @SubscribeMessage('endgame')
+  async handleLosegame(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() roomId: string,
+  ) {
+    const userId = socket.data.userId as string;
+    console.log('endgame', userId);
+
+    this.server.to(roomId).emit('endgame', {
+      loserId: userId,
+    });
+  }
+
+  @SubscribeMessage('pointIncrease')
+  async handleIncreasePoint(@ConnectedSocket() socket: Socket) {
+    const userId = socket.data.userId as string;
+    console.log('pointIncrease', userId);
+
+    const currentUser = await this.userService.getUser(Number(userId));
+
+    // Update User Point
+    await this.userService.updateUser(Number(userId), {
+      username: currentUser.username,
+      point: currentUser.point + 25,
+    });
+
+    this.server.to(socket.data.userId).emit('pointUpdate');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
